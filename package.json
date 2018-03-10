@@ -1,0 +1,39 @@
+{
+  "name": "generator-angular-page",
+  "version": "0.1.0",
+  "description": "Yeoman.io generator fo Angular.io page with routing.",
+  "files": [
+    "generators"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "preinstall": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thepipecat/yo-angular-page.git"
+  },
+  "keywords": [
+    "yeoman-generator",
+    "yeoman",
+    "generator",
+    "angular",
+    "page"
+  ],
+  "author": {
+    "name": "Pedro Xudre",
+    "email": "xudre@me.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/thepipecat/yo-angular-page/issues"
+  },
+  "homepage": "https://github.com/thepipecat/yo-angular-page#readme",
+  "dependencies": {
+    "@types/uppercamelcase": "^3.0.0",
+    "@types/yeoman-generator": "^2.0.1",
+    "camelcase": "^4.1.0",
+    "uppercamelcase": "^3.0.0",
+    "yeoman-generator": "^2.0.3"
+  }
+}
