@@ -1,12 +1,19 @@
 # Yeoman Angular.io pages generator
 
-## Install:
+## Getting Started
 
-`npm i -D generator-angular-page`
+**Steps:**
+1. Install Yeoman if not had yet: `npm i -g yo`
+2. Install the generator: `npm i -g generator-angular-page`
 
-## Use:
+## Use
 
 `yo angular-page`
+
+## Features
+
+• Generates Angular.io new pages with routing support.
+• Auto prefixes for better directory organization.
 
 ## Options
 
