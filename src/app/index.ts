@@ -64,10 +64,10 @@ class GeneratorAngularPage extends Generator {
           return;
         }
 
-        this.pageId = (this.options['prefix']) ? this.pagePrefix + answers.id : answers.id;
+        this.pageId = this.options['prefix'] == true ? this.pagePrefix + answers.id : answers.id;
 
         this.log('Page info:', JSON.stringify({
-          'selector': answers.id,
+          'selector': this.pageId,
           'routing': this.options['routing'] ? 'yes' : 'no',
           'scss': this.options['sass'] ? 'yes' : 'no',
           'spec': this.options['spec'] ? 'yes' : 'no',
