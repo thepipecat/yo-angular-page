@@ -1,6 +1,6 @@
 {
   "name": "generator-angular-page",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "Yeoman.io generator fo Angular.io page with routing.",
   "files": [
     "generators"

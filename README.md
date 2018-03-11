@@ -18,6 +18,8 @@
 
 ## Options
 
+*--no-prefix*  - Do not set the default `page-` prefix.
+
 *--no-routing* - The page will not have a route receiver.
 
 *--no-sass*    - Uses the `.css` as default StyleSheet file.

@@ -11,6 +11,7 @@ import * as HtmlTpl from './templates/page-html';
 
 class GeneratorAngularPage extends Generator {
 
+  private pagePrefix: string = 'page-';
   private pageId: string;
 
   constructor(args: string | string[], opts: {}) {
@@ -20,6 +21,10 @@ class GeneratorAngularPage extends Generator {
   }
 
   protected SetupGenerator(): void {
+    this.option('prefix', {
+      type: Boolean,
+      default: true
+    });
     this.option('routing', {
       type: Boolean,
       default: true
@@ -41,8 +46,7 @@ class GeneratorAngularPage extends Generator {
   protected Prompt(): void {
     let askID: Generator.Question = {
       name: 'id',
-      message: 'Page id: (my-page-name)',
-      prefix: 'page-'
+      message: 'Page id: (my-page-name)'
     };
     let askAllFine: Generator.Question = {
       type: 'confirm',
@@ -52,15 +56,23 @@ class GeneratorAngularPage extends Generator {
 
     this.prompt([askID])
       .then(answers => {
-        this.log('New page info:', JSON.stringify({
-          'id': answers.id,
+        if (!answers.id || /^\s*$/.test(answers.id)) {
+          this.log('Page id is required.');
+
+          this.Create();
+
+          return;
+        }
+
+        this.pageId = (this.options['prefix']) ? this.pagePrefix + answers.id : answers.id;
+
+        this.log('Page info:', JSON.stringify({
+          'selector': answers.id,
           'routing': this.options['routing'] ? 'yes' : 'no',
           'scss': this.options['sass'] ? 'yes' : 'no',
           'spec': this.options['spec'] ? 'yes' : 'no',
           'inline': this.options['inline'] ? 'yes' : 'no'
         }, null, 2));
-
-        this.pageId = answers.id;
 
         this.prompt([askAllFine])
           .then(answers => {
