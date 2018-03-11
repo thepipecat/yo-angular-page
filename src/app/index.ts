@@ -34,14 +34,15 @@ class GeneratorAngularPage extends Generator {
     });
     this.option('inline', {
       type: Boolean,
-      default: true
+      default: false
     });
   }
 
   protected Prompt(): void {
     let askID: Generator.Question = {
       name: 'id',
-      message: 'Page id: (my-page-name)'
+      message: 'Page id: (my-page-name)',
+      prefix: 'page-'
     };
     let askAllFine: Generator.Question = {
       type: 'confirm',
@@ -53,9 +54,9 @@ class GeneratorAngularPage extends Generator {
       .then(answers => {
         this.log('New page info:', JSON.stringify({
           'id': answers.id,
-          'routing': !this.options['routing'] ? 'yes' : 'no',
-          'scss': !this.options['sass'] ? 'yes' : 'no',
-          'spec': !this.options['spec'] ? 'yes' : 'no',
+          'routing': this.options['routing'] ? 'yes' : 'no',
+          'scss': this.options['sass'] ? 'yes' : 'no',
+          'spec': this.options['spec'] ? 'yes' : 'no',
           'inline': this.options['inline'] ? 'yes' : 'no'
         }, null, 2));
 
@@ -73,7 +74,7 @@ class GeneratorAngularPage extends Generator {
   }
 
   protected Create(): void {
-    let pageSelector: string = 'page-' + this.pageId;
+    let pageSelector: string = this.pageId;
     let destDir: string = this.destinationPath(pageSelector);
 
     fs.mkdir(destDir, err => {
@@ -82,13 +83,15 @@ class GeneratorAngularPage extends Generator {
         let moduleContent: string;
         let componentContent: string;
 
-        if (!this.options['routing']) {
-          moduleContent = ModuleTpl.default(pageName, pageSelector);
-        } else {
+        if (this.options['routing']) {
           moduleContent = ModuleRoutingTpl.default(pageName, pageSelector);
+        } else {
+          moduleContent = ModuleTpl.default(pageName, pageSelector);
         }
 
-        if (!this.options['inline']) {
+        if (this.options['inline']) {
+          componentContent = ComponentInlineTpl.default(pageName, pageSelector);
+        } else {
           let htmlContent: string = HtmlTpl.default(pageName, pageSelector);
           let cssContent: string = '';
 
@@ -96,13 +99,11 @@ class GeneratorAngularPage extends Generator {
 
           this.fs.write(destDir + '/' + pageSelector + '.component.html', htmlContent);
 
-          if (!this.options['sass']) {
+          if (this.options['sass']) {
             this.fs.write(destDir + '/' + pageSelector + '.component.scss', cssContent);
           } else {
             this.fs.write(destDir + '/' + pageSelector + '.component.css', cssContent);
           }
-        } else {
-          componentContent = ComponentInlineTpl.default(pageName, pageSelector);
         }
 
         if (this.options['spec']) {
