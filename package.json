@@ -1,12 +1,12 @@
 {
   "name": "generator-angular-page",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Yeoman.io generator fo Angular.io page with routing.",
   "files": [
     "generators"
   ],
   "scripts": {
-    "build": "tsc -p ./tsconfig.json",
+    "build": "tsc",
     "preinstall": "npm run build"
   },
   "repository": {
