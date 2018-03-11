@@ -22,4 +22,6 @@
 
 *--no-sass*    - Uses the `.css` as default StyleSheet file.
 
+*--no-spec*    - Do no create Angular component base test `.spec.ts` file.
+
 *--inline*     - Do not create HTML template and StyleSheet files.

@@ -6,6 +6,7 @@ import * as ComponentTpl from './templates/page-component';
 import * as ComponentInlineTpl from './templates/page-component';
 import * as ModuleTpl from './templates/page-module';
 import * as ModuleRoutingTpl from './templates/page-module-routing';
+import * as SpecTpl from './templates/page-spec';
 import * as HtmlTpl from './templates/page-html';
 
 class GeneratorAngularPage extends Generator {
@@ -20,12 +21,21 @@ class GeneratorAngularPage extends Generator {
 
   protected SetupGenerator(): void {
     this.option('routing', {
-      type: Boolean
+      type: Boolean,
+      default: true
     });
     this.option('sass', {
-      type: Boolean
+      type: Boolean,
+      default: true
     });
-    this.option('inline', {});
+    this.option('spec', {
+      type: Boolean,
+      default: true
+    });
+    this.option('inline', {
+      type: Boolean,
+      default: true
+    });
   }
 
   protected Prompt(): void {
@@ -43,8 +53,9 @@ class GeneratorAngularPage extends Generator {
       .then(answers => {
         this.log('New page info:', JSON.stringify({
           'id': answers.id,
-          'routing': !this.options['no-routing'] ? 'yes' : 'no',
-          'scss': !this.options['no-sass'] ? 'yes' : 'no',
+          'routing': !this.options['routing'] ? 'yes' : 'no',
+          'scss': !this.options['sass'] ? 'yes' : 'no',
+          'spec': !this.options['spec'] ? 'yes' : 'no',
           'inline': this.options['inline'] ? 'yes' : 'no'
         }, null, 2));
 
@@ -71,7 +82,7 @@ class GeneratorAngularPage extends Generator {
         let moduleContent: string;
         let componentContent: string;
 
-        if (!this.options['no-routing']) {
+        if (!this.options['routing']) {
           moduleContent = ModuleTpl.default(pageName, pageSelector);
         } else {
           moduleContent = ModuleRoutingTpl.default(pageName, pageSelector);
@@ -85,13 +96,19 @@ class GeneratorAngularPage extends Generator {
 
           this.fs.write(destDir + '/' + pageSelector + '.component.html', htmlContent);
 
-          if (!this.options['no-sass']) {
+          if (!this.options['sass']) {
             this.fs.write(destDir + '/' + pageSelector + '.component.scss', cssContent);
           } else {
             this.fs.write(destDir + '/' + pageSelector + '.component.css', cssContent);
           }
         } else {
           componentContent = ComponentInlineTpl.default(pageName, pageSelector);
+        }
+
+        if (this.options['spec']) {
+          let specContent: string = SpecTpl.default(pageName, pageSelector);
+
+          this.fs.write(destDir + '/' + pageSelector + '.spec.ts', specContent);
         }
 
         this.fs.write(destDir + '/' + pageSelector + '.module.ts', moduleContent);
