@@ -13,6 +13,7 @@
 ## Features
 
 • Generates Angular.io new pages with routing support.
+
 • Auto prefixes for better directory organization.
 
 ## Options
