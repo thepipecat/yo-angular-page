@@ -1,9 +1,10 @@
 import * as fs from 'fs';
 import * as Generator from 'yeoman-generator';
 import * as upper from 'uppercamelcase';
+import * as mkdirp from 'mkdirp';
 
 import * as ComponentTpl from './templates/page-component';
-import * as ComponentInlineTpl from './templates/page-component';
+import * as ComponentInlineTpl from './templates/page-component-inline';
 import * as ModuleTpl from './templates/page-module';
 import * as ModuleRoutingTpl from './templates/page-module-routing';
 import * as SpecTpl from './templates/page-spec';
@@ -11,8 +12,17 @@ import * as HtmlTpl from './templates/page-html';
 
 class GeneratorAngularPage extends Generator {
 
-  private pagePrefix: string = 'page-';
-  private pageId: string;
+  private defaultPagePrefix: string = 'page-';
+
+  private buildConfig: {
+    appPrefix: string;
+    appSource: string;
+    id: string;
+    routing: string;
+    scss: string;
+    spec: string;
+    inline: string;
+  };
 
   constructor(args: string | string[], opts: {}) {
     super(args, opts);
@@ -22,8 +32,8 @@ class GeneratorAngularPage extends Generator {
 
   protected SetupGenerator(): void {
     this.option('prefix', {
-      type: Boolean,
-      default: true
+      type: String,
+      default: this.defaultPagePrefix
     });
     this.option('routing', {
       type: Boolean,
@@ -46,7 +56,7 @@ class GeneratorAngularPage extends Generator {
   protected Prompt(): void {
     let askID: Generator.Question = {
       name: 'id',
-      message: 'Page id: (my-page-name)'
+      message: 'Page id: (will be prefixed)'
     };
     let askAllFine: Generator.Question = {
       type: 'confirm',
@@ -64,15 +74,48 @@ class GeneratorAngularPage extends Generator {
           return;
         }
 
-        this.pageId = this.options['prefix'] == true ? this.pagePrefix + answers.id : answers.id;
+        try {
+          let angularConfig = fs.readFileSync(this.destinationRoot() + '/.angular-cli.json', 'utf8');
+          let angular = JSON.parse(angularConfig);
 
-        this.log('Page info:', JSON.stringify({
-          'selector': this.pageId,
-          'routing': this.options['routing'] ? 'yes' : 'no',
-          'scss': this.options['sass'] ? 'yes' : 'no',
-          'spec': this.options['spec'] ? 'yes' : 'no',
-          'inline': this.options['inline'] ? 'yes' : 'no'
-        }, null, 2));
+          this.buildConfig = {
+            appPrefix: angular.apps[0].prefix + '-',
+            appSource: angular.apps[0].root + '/' + angular.apps[0].prefix + '/',
+            id: this.options['prefix'] + answers.id,
+            routing: this.options['routing'] ? 'yes' : 'no',
+            scss: this.options['sass'] ? 'yes' : 'no',
+            spec: this.options['spec'] ? 'yes' : 'no',
+            inline: this.options['inline'] ? 'yes' : 'no'
+          };
+
+          if (angular.defaults) {
+            if ('styleExt' in angular.defaults) {
+              this.buildConfig.scss = angular.defaults.styleExt == 'scss' ? 'yes' : 'no';
+            }
+
+            if ('component' in angular.defaults) {
+              if ('spec' in angular.defaults.component) {
+                this.buildConfig.spec = angular.defaults.component.spec ? 'yes' : 'no';
+              }
+
+              this.buildConfig.inline = angular.defaults.component.inlineStyle || angular.defaults.component.inlineTemplate ? 'yes' : 'no';
+            }
+          }
+        } catch (ex) {
+          // Angular.io config not found?
+
+          this.buildConfig = {
+            appPrefix: 'app-',
+            appSource: '',
+            id: this.options['prefix'] + answers.id,
+            routing: this.options['routing'] ? 'yes' : 'no',
+            scss: this.options['sass'] ? 'yes' : 'no',
+            spec: this.options['spec'] ? 'yes' : 'no',
+            inline: this.options['inline'] ? 'yes' : 'no'
+          };
+        }
+
+        this.log('Page info:', JSON.stringify(this.buildConfig, ['id', 'routing', 'scss', 'spec', 'inline'], 2));
 
         this.prompt([askAllFine])
           .then(answers => {
@@ -86,49 +129,54 @@ class GeneratorAngularPage extends Generator {
   }
 
   protected Create(): void {
-    let pageSelector: string = this.pageId;
-    let destDir: string = this.destinationPath(pageSelector);
+    let pageSelector: string = this.buildConfig.appPrefix + this.buildConfig.id;
+    let pageName: string = upper(this.buildConfig.id);
+    let fileName: string = this.buildConfig.id;
+    let destDir: string = this.destinationPath(this.buildConfig.appSource + this.buildConfig.id);
 
-    fs.mkdir(destDir, err => {
-      if (err == null) {
-        let pageName: string = upper(pageSelector);
-        let moduleContent: string;
-        let componentContent: string;
+    let hasRoute: boolean = this.buildConfig.routing == 'yes';
+    let hasSass: boolean = this.buildConfig.scss == 'yes';
+    let hasSpec: boolean = this.buildConfig.spec == 'yes';
+    let isInline: boolean = this.buildConfig.inline == 'yes';
 
-        if (this.options['routing']) {
-          moduleContent = ModuleRoutingTpl.default(pageName, pageSelector);
-        } else {
-          moduleContent = ModuleTpl.default(pageName, pageSelector);
-        }
+    let moduleContent: string;
+    let componentContent: string;
 
-        if (this.options['inline']) {
-          componentContent = ComponentInlineTpl.default(pageName, pageSelector);
-        } else {
-          let htmlContent: string = HtmlTpl.default(pageName, pageSelector);
-          let cssContent: string = '';
-
-          componentContent = ComponentTpl.default(pageName, pageSelector);
-
-          this.fs.write(destDir + '/' + pageSelector + '.component.html', htmlContent);
-
-          if (this.options['sass']) {
-            this.fs.write(destDir + '/' + pageSelector + '.component.scss', cssContent);
-          } else {
-            this.fs.write(destDir + '/' + pageSelector + '.component.css', cssContent);
-          }
-        }
-
-        if (this.options['spec']) {
-          let specContent: string = SpecTpl.default(pageName, pageSelector);
-
-          this.fs.write(destDir + '/' + pageSelector + '.spec.ts', specContent);
-        }
-
-        this.fs.write(destDir + '/' + pageSelector + '.module.ts', moduleContent);
-        this.fs.write(destDir + '/' + pageSelector + '.component.ts', componentContent);
+    mkdirp(destDir, () => {
+      if (hasRoute) {
+        moduleContent = ModuleRoutingTpl.default(pageName, fileName);
+      } else {
+        moduleContent = ModuleTpl.default(pageName, fileName);
       }
+
+      if (isInline) {
+        componentContent = ComponentInlineTpl.default(pageName, pageSelector);
+      } else {
+        let htmlContent: string = HtmlTpl.default(pageName, pageSelector);
+        let cssContent: string = '';
+
+        componentContent = ComponentTpl.default(pageName, pageSelector, hasSass, fileName);
+
+        this.fs.write(destDir + '/' + fileName + '.component.html', htmlContent);
+
+        if (hasSass) {
+          this.fs.write(destDir + '/' + fileName + '.component.scss', cssContent);
+        } else {
+          this.fs.write(destDir + '/' + fileName + '.component.css', cssContent);
+        }
+      }
+
+      if (hasSpec) {
+        let specContent: string = SpecTpl.default(pageName, fileName);
+
+        this.fs.write(destDir + '/' + fileName + '.spec.ts', specContent);
+      }
+
+      this.fs.write(destDir + '/' + fileName + '.module.ts', moduleContent);
+      this.fs.write(destDir + '/' + fileName + '.component.ts', componentContent);
     });
   }
+
 }
 
 module.exports = class extends GeneratorAngularPage {

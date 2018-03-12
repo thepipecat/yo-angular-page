@@ -4,7 +4,7 @@ export default (name: string, selector: string) => {
   return `import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-${selector}',
+  selector: '${selector}',
   template: '` + html.default(name, selector) + `',
   style: ['']
 })

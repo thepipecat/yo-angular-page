@@ -1,7 +1,7 @@
-export default (name: string, selector: string) => {
+export default (name: string, file: string) => {
   return `import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { ${name}Component } from './${selector}.component';
+import { ${name}Component } from './${file}.component';
 
 describe('${name}Component', () => {
   let component: ${name}Component;

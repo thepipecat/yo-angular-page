@@ -6,7 +6,7 @@
 1. Install Yeoman if not had yet: `npm i -g yo`
 2. Install the generator: `npm i -g generator-angular-page`
 
-## Use
+**Use:**
 
 `yo angular-page`
 
@@ -14,11 +14,13 @@
 
 • Generates Angular.io new pages with routing support.
 
-• Auto prefixes for better directory organization.
+• Default prefixes for better directory organization.
+
+• Uses defaults from the Angular.io config file (`.angular-cli.json`) in the root directory.
 
 ## Options
 
-*--no-prefix*  - Do not set the default `page-` prefix.
+*--prefix `value`*  - Set the page selector prefix. Default: `page-`
 
 *--no-routing* - The page will not have a route receiver.
 
@@ -27,3 +29,5 @@
 *--no-spec*    - Do no create Angular component base test `.spec.ts` file.
 
 *--inline*     - Do not create HTML template and StyleSheet files.
+
+**Warning:** `.angular-cli.json` *defaults* will have precedence.
