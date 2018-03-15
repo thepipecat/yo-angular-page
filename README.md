@@ -1,5 +1,7 @@
 # Yeoman Angular.io pages generator
 
+[![NPM](https://nodei.co/npm/generator-angular-page.png)](https://nodei.co/npm/generator-angular-page/)
+
 ## Getting Started
 
 **Steps:**
