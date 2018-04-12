@@ -11,7 +11,6 @@ import * as SpecTpl from './templates/page-spec';
 import * as HtmlTpl from './templates/page-html';
 
 class GeneratorAngularPage extends Generator {
-
   private defaultPagePrefix: string = 'page-';
 
   private buildConfig: {
@@ -56,7 +55,7 @@ class GeneratorAngularPage extends Generator {
   protected Prompt(): void {
     let askID: Generator.Question = {
       name: 'id',
-      message: 'Page id: (will be prefixed)'
+      message: `Page id: (will be prefixed with "${this.options['prefix']}")`
     };
     let askAllFine: Generator.Question = {
       type: 'confirm',
@@ -64,68 +63,66 @@ class GeneratorAngularPage extends Generator {
       message: 'This is all correct?'
     };
 
-    this.prompt([askID])
-      .then(answers => {
-        if (!answers.id || /^\s*$/.test(answers.id)) {
-          this.log('Page id is required.');
+    this.prompt([askID]).then(answers => {
+      if (!answers.id || /^\s*$/.test(answers.id)) {
+        this.log('Page id is required.');
 
-          this.Create();
+        this.Create();
 
-          return;
-        }
+        return;
+      }
 
-        try {
-          let angularConfig = fs.readFileSync(this.destinationRoot() + '/.angular-cli.json', 'utf8');
-          let angular = JSON.parse(angularConfig);
+      try {
+        let angularConfig = fs.readFileSync(this.destinationRoot() + '/.angular-cli.json', 'utf8');
+        let angular = JSON.parse(angularConfig);
 
-          this.buildConfig = {
-            appPrefix: angular.apps[0].prefix + '-',
-            appSource: angular.apps[0].root + '/' + angular.apps[0].prefix + '/',
-            id: this.options['prefix'] + answers.id,
-            routing: this.options['routing'] ? 'yes' : 'no',
-            scss: this.options['sass'] ? 'yes' : 'no',
-            spec: this.options['spec'] ? 'yes' : 'no',
-            inline: this.options['inline'] ? 'yes' : 'no'
-          };
+        this.buildConfig = {
+          appPrefix: angular.apps[0].prefix + '-',
+          appSource: angular.apps[0].root + '/' + angular.apps[0].prefix + '/',
+          id: this.options['prefix'] + answers.id,
+          routing: this.options['routing'] ? 'yes' : 'no',
+          scss: this.options['sass'] ? 'yes' : 'no',
+          spec: this.options['spec'] ? 'yes' : 'no',
+          inline: this.options['inline'] ? 'yes' : 'no'
+        };
 
-          if (angular.defaults) {
-            if ('styleExt' in angular.defaults) {
-              this.buildConfig.scss = angular.defaults.styleExt == 'scss' ? 'yes' : 'no';
-            }
-
-            if ('component' in angular.defaults) {
-              if ('spec' in angular.defaults.component) {
-                this.buildConfig.spec = angular.defaults.component.spec ? 'yes' : 'no';
-              }
-
-              this.buildConfig.inline = angular.defaults.component.inlineStyle || angular.defaults.component.inlineTemplate ? 'yes' : 'no';
-            }
+        if (angular.defaults) {
+          if ('styleExt' in angular.defaults) {
+            this.buildConfig.scss = angular.defaults.styleExt == 'scss' ? 'yes' : 'no';
           }
-        } catch (ex) {
-          // Angular.io config not found?
 
-          this.buildConfig = {
-            appPrefix: 'app-',
-            appSource: '',
-            id: this.options['prefix'] + answers.id,
-            routing: this.options['routing'] ? 'yes' : 'no',
-            scss: this.options['sass'] ? 'yes' : 'no',
-            spec: this.options['spec'] ? 'yes' : 'no',
-            inline: this.options['inline'] ? 'yes' : 'no'
-          };
-        }
-
-        this.log('Page info:', JSON.stringify(this.buildConfig, ['id', 'routing', 'scss', 'spec', 'inline'], 2));
-
-        this.prompt([askAllFine])
-          .then(answers => {
-            if (answers.ok) {
-              this.Create();
-            } else {
-              this.Prompt();
+          if ('component' in angular.defaults) {
+            if ('spec' in angular.defaults.component) {
+              this.buildConfig.spec = angular.defaults.component.spec ? 'yes' : 'no';
             }
-          });
+
+            this.buildConfig.inline = angular.defaults.component.inlineStyle || angular.defaults.component.inlineTemplate ? 'yes' : 'no';
+          }
+        }
+      } catch (ex) {
+        // Angular.io config not found?
+
+        this.buildConfig = {
+          appPrefix: 'app-',
+          appSource: '',
+          id: this.options['prefix'] + answers.id,
+          routing: this.options['routing'] ? 'yes' : 'no',
+          scss: this.options['sass'] ? 'yes' : 'no',
+          spec: this.options['spec'] ? 'yes' : 'no',
+          inline: this.options['inline'] ? 'yes' : 'no'
+        };
+      }
+
+      this.log('Page info:', JSON.stringify(this.buildConfig, ['id', 'routing', 'scss', 'spec', 'inline'], 2));
+
+      this.prompt([askAllFine]).then(answers => {
+        if (answers.ok) {
+          this.Create();
+        } else {
+          this.Prompt();
+        }
       });
+    });
   }
 
   protected Create(): void {
@@ -176,7 +173,6 @@ class GeneratorAngularPage extends Generator {
       this.fs.write(destDir + '/' + fileName + '.component.ts', componentContent);
     });
   }
-
 }
 
 module.exports = class extends GeneratorAngularPage {
